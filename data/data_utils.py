@@ -7,23 +7,23 @@ from models import torch_utils
 from data import constants
 import utils
 
-from data.configs.block_stacking_3 import ADNBlockStacking3Config
-from data.configs.house_building_2 import ADNHouseBuilding2Config
-from data.configs.bottle_tray import ADNBottleTrayConfig
-from data.configs.bin_packing import ADNBinPackingConfig
+from data.configs.block_stacking_3 import BlockStacking3Config
+from data.configs.house_building_2 import HouseBuilding2Config
+from data.configs.bottle_tray import BottleTrayConfig
+from data.configs.bin_packing import BinPackingConfig
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 task_config_dict = {
-  'adn_block_stacking_3' : ADNBlockStacking3Config,
-  'adn_house_building_2' : ADNHouseBuilding2Config,
-  'adn_bottle_tray' : ADNBottleTrayConfig,
-  'adn_bin_packing' : ADNBinPackingConfig,
+  'block_stacking_3' : BlockStacking3Config,
+  'house_building_2' : HouseBuilding2Config,
+  'bottle_tray' : BottleTrayConfig,
+  'bin_packing' : BinPackingConfig,
 }
 
-def getTaskConfig(agent, task, num_gpus, results_path=None):
+def getTaskConfig(task, num_gpus, results_path=None):
   try:
-    config = task_config_dict['{}_{}'.format(agent, task)](num_gpus, results_path=results_path)
+    config = task_config_dict[task](num_gpus, results_path=results_path)
   except:
     raise ValueError('Invalid task specified')
 

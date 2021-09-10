@@ -234,6 +234,16 @@ class ADNAgent(object):
 
     return torch.bitwise_and(is_block_pre_pick, ~is_block_post_pick)
 
+  def getStateValue(self, obs, normalize_obs=True):
+    hand_obs = torch.Tensor(obs[1].astype(np.float32))
+    obs = torch.Tensor(obs[2].astype(np.float32))
+    if normalize_obs:
+      hand_obs = self.preprocessDepth(hand_obs)
+      obs = self.preprocessDepth(obs)
+
+    with torch.no_grad():
+      return self.state_value_model(obs.to(self.device), hand_obs.to(self.device))
+
   def updateWeights(self, batch, class_weight):
     # Check that training mode was enabled at init
     if not self.training:

@@ -9,9 +9,9 @@ import numpy as np
 from data import constants
 from data.configs.config import Config
 
-class ADNBottleTrayConfig(Config):
+class BottleTrayConfig(Config):
   def __init__(self, num_gpus=1, results_path=None):
-    super(ADNBottleTrayConfig, self).__init__(num_gpus=num_gpus)
+    super(BottleTrayConfig, self).__init__(num_gpus=num_gpus)
     self.seed = 0
 
     # Env
@@ -27,7 +27,6 @@ class ADNBottleTrayConfig(Config):
     self.max_steps = constants.BOTTLE_TRAY_ENV_CONFIG['max_steps']
 
     # Agent
-    self.agent = 'adn'
     self.depth = 1
     self.num_sampled_actions = 10
     self.num_rots = 8
