@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch_utils import Flatten, makeLayer, BottleneckBlock, UpsamplingBlock, CatConv
+from models.torch_utils import Flatten, makeLayer, BottleneckBlock, UpsamplingBlock, CatConv
 from data import constants
 
 class ObsPredictionModel(nn.Module):

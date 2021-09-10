@@ -6,8 +6,9 @@ import numpy as np
 import numpy.random as npr
 import torch
 
-import utils
+from data import data_utils
 from adn_agent import ADNAgent
+import utils
 
 @ray.remote
 class ReplayBuffer():
@@ -235,7 +236,7 @@ class Sampler():
     target_state_values, target_q_values, target_rewards, state, hand_obs, obs, actions = [list() for _ in range(7)]
     for current_idx in range(step_idx, step_idx + self.config.num_unroll_steps + 1):
       if current_idx < len(eps_history.value_history):
-        state_value, q_value = self.computeADNTargetValue(eps_history, current_idx)
+        state_value, q_value = self.computeTargetValue(eps_history, current_idx)
         target_state_values.append(state_value)
         target_q_values.append(q_value)
         target_rewards.append(eps_history.reward_history[current_idx])

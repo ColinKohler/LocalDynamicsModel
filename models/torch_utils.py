@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def roundTensor(tensor, dec=0):
+  return torch.round(tensor * 10**dec) / 10**dec
+
 def dictToCpu(dictionary):
   cpu_dict = {}
   for key, value in dictionary.items():

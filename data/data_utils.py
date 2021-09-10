@@ -2,26 +2,22 @@ import torch
 import numpy as np
 import numpy.random as npr
 
-import torch_utils.utils as torch_utils
+from models import torch_utils
 
-import constants
+from data import constants
 import utils
 
-from configs.adn.block_stacking_3 import ADNBlockStacking3Config
-from configs.adn.house_building_2 import ADNHouseBuilding2Config
-from configs.adn.house_building_3 import ADNHouseBuilding3Config
-from configs.adn.bottle_tray import ADNBottleTrayConfig
-from configs.adn.box_palletizing import ADNBoxPalletizingConfig
-from configs.adn.bin_packing import ADNBinPackingConfig
+from data.configs.block_stacking_3 import ADNBlockStacking3Config
+from data.configs.house_building_2 import ADNHouseBuilding2Config
+from data.configs.bottle_tray import ADNBottleTrayConfig
+from data.configs.bin_packing import ADNBinPackingConfig
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 task_config_dict = {
   'adn_block_stacking_3' : ADNBlockStacking3Config,
   'adn_house_building_2' : ADNHouseBuilding2Config,
-  'adn_house_building_3' : ADNHouseBuilding3Config,
   'adn_bottle_tray' : ADNBottleTrayConfig,
-  'adn_box_palletizing' : ADNBoxPalletizingConfig,
   'adn_bin_packing' : ADNBinPackingConfig,
 }
 
@@ -39,7 +35,6 @@ def getPlannerConfig(pick_noise, place_noise, rand_action_prob, random_orientati
     'place_noise': place_noise,
     'rand_place_prob': rand_action_prob,
     'rand_pick_prob': rand_action_prob,
-    'gamma': constants.ENV_GAMMA,
     'random_orientation': random_orientation
   }
 

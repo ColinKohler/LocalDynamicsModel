@@ -17,6 +17,10 @@ ray = "*"
 pygraphviz = "*"
 importlib-metadata = "==2.0.0"
 cupy-cuda102 = "*"
+pybullet = "*"
+scipy = "*"
+scikit-image = "*"
+gitpython = "*"
 
 [requires]
 python_version = "3.7"

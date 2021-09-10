@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch_utils import Flatten, makeLayer, BasicBlock
+from models.torch_utils import Flatten, makeLayer, BasicBlock
 from data import constants
 from data import data_utils
 
