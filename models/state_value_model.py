@@ -1,15 +1,11 @@
-import sys
-sys.path.append('..')
-
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from torch_utils import Flatten, makeLayer, BasicBlock
 from data import constants
 from data import data_utils
-
-from torch_utils.modules.general_layers import Flatten
-from torch_utils.modules.resnet import makeLayer, BasicBlock
 
 class StateValueModel(nn.Module):
   def __init__(self, in_channels, device):
@@ -34,7 +30,6 @@ class StateValueModel(nn.Module):
     self.value_head = nn.Sequential(
       nn.Conv2d(256+128, 256, 3, stride=2, padding=1),
       nn.LeakyReLU(0.01, inplace=True),
-      #nn.AdaptiveAvgPool2d((1,1)),
       Flatten(),
       nn.Linear(256*4*4, 2048),
       nn.LeakyReLU(0.01, inplace=True),
@@ -48,7 +43,6 @@ class StateValueModel(nn.Module):
     self.reward_head = nn.Sequential(
       nn.Conv2d(256+128, 256, 3, stride=2, padding=1),
       nn.LeakyReLU(0.01, inplace=True),
-      #nn.AdaptiveAvgPool2d((1,1)),
       Flatten(),
       nn.Linear(256*4*4, 2048),
       nn.LeakyReLU(0.01, inplace=True),
@@ -62,7 +56,6 @@ class StateValueModel(nn.Module):
     for m in self.modules():
       if isinstance(m, (nn.Conv2d)):
         nn.init.kaiming_normal_(m.weight, mode='fan_out', a=0.01, nonlinearity='leaky_relu')
-        #nn.init.xavier_normal_(m.weight)
       elif isinstance(m, nn.BatchNorm2d):
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)

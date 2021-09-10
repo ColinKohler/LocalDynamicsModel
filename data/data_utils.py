@@ -1,38 +1,18 @@
-import sys
-sys.path.append('..')
-
 import torch
 import numpy as np
 import numpy.random as npr
 
 import torch_utils.utils as torch_utils
 
-from data import constants
+import constants
 import utils
 
-from data.configs.adn.block_stacking_3 import ADNBlockStacking3Config
-from data.configs.adn.house_building_2 import ADNHouseBuilding2Config
-from data.configs.adn.house_building_3 import ADNHouseBuilding3Config
-from data.configs.adn.bottle_tray import ADNBottleTrayConfig
-from data.configs.adn.box_palletizing import ADNBoxPalletizingConfig
-from data.configs.adn.bin_packing import ADNBinPackingConfig
-
-from data.configs.shooting.block_stacking_3 import ShootingBlockStacking3Config
-from data.configs.shooting.house_building_2 import ShootingHouseBuilding2Config
-
-from data.configs.fc_dqn.block_stacking_3 import FCDQNBlockStacking3Config
-from data.configs.fc_dqn.house_building_2 import FCDQNHouseBuilding2Config
-from data.configs.fc_dqn.house_building_3 import FCDQNHouseBuilding3Config
-from data.configs.fc_dqn.bottle_tray import FCDQNBottleTrayConfig
-from data.configs.fc_dqn.box_palletizing import FCDQNBoxPalletizingConfig
-from data.configs.fc_dqn.bin_packing import FCDQNBinPackingConfig
-
-from data.configs.rot_fc_dqn.block_stacking_3 import RotFCDQNBlockStacking3Config
-from data.configs.rot_fc_dqn.house_building_2 import RotFCDQNHouseBuilding2Config
-from data.configs.rot_fc_dqn.house_building_3 import RotFCDQNHouseBuilding3Config
-from data.configs.rot_fc_dqn.bottle_tray import RotFCDQNBottleTrayConfig
-from data.configs.rot_fc_dqn.box_palletizing import RotFCDQNBoxPalletizingConfig
-from data.configs.rot_fc_dqn.bin_packing import RotFCDQNBinPackingConfig
+from configs.adn.block_stacking_3 import ADNBlockStacking3Config
+from configs.adn.house_building_2 import ADNHouseBuilding2Config
+from configs.adn.house_building_3 import ADNHouseBuilding3Config
+from configs.adn.bottle_tray import ADNBottleTrayConfig
+from configs.adn.box_palletizing import ADNBoxPalletizingConfig
+from configs.adn.bin_packing import ADNBinPackingConfig
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -43,20 +23,6 @@ task_config_dict = {
   'adn_bottle_tray' : ADNBottleTrayConfig,
   'adn_box_palletizing' : ADNBoxPalletizingConfig,
   'adn_bin_packing' : ADNBinPackingConfig,
-  'shooting_block_stacking_3' : ShootingBlockStacking3Config,
-  'shooting_house_building_2' : ShootingHouseBuilding2Config,
-  'fc_dqn_block_stacking_3' : FCDQNBlockStacking3Config,
-  'fc_dqn_house_building_2' : FCDQNHouseBuilding2Config,
-  'fc_dqn_house_building_3' : FCDQNHouseBuilding3Config,
-  'fc_dqn_bottle_tray' : FCDQNBottleTrayConfig,
-  'fc_dqn_box_palletizing' : FCDQNBoxPalletizingConfig,
-  'fc_dqn_bin_packing' : FCDQNBinPackingConfig,
-  'rot_fc_dqn_block_stacking_3' : RotFCDQNBlockStacking3Config,
-  'rot_fc_dqn_house_building_2' : RotFCDQNHouseBuilding2Config,
-  'rot_fc_dqn_house_building_3' : RotFCDQNHouseBuilding3Config,
-  'rot_fc_dqn_bottle_tray' : RotFCDQNBottleTrayConfig,
-  'rot_fc_dqn_box_palletizing' : RotFCDQNBoxPalletizingConfig,
-  'rot_fc_dqn_bin_packing' : RotFCDQNBinPackingConfig,
 }
 
 def getTaskConfig(agent, task, num_gpus, results_path=None):

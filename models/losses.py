@@ -1,40 +1,56 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
-def smoothnessLoss(depth_img):
-  loss = torch.sum(torch.abs(depth_img[:,:,:,:-1] - depth_img[:,:,:,1:]))+ \
-         torch.sum(torch.abs(depth_img[:,:,:-1,:] - depth_img[:,:,1:,:]))
+class FocalLoss(nn.Module):
+  def __init__(self, device, alpha=None, gamma=2, smooth=1e-5, size_average=True):
+    super(FocalLoss, self).__init__()
+    self.device = device
+    self.alpha = alpha
+    self.gamma = gamma
+    self.smooth = smooth
+    self.size_average = size_average
 
-  return loss
+    if self.smooth is not None:
+      if self.smooth < 0 or self.smooth > 1.0:
+        raise ValueError('Smooth value should be in [0,1]')
 
-def reconLoss(x, y, smoothness_weight=0):
-  return F.mse_loss(x, y, reduction='mean') + smoothness_weight * smoothnessLoss(x)
+  def forward(self, logit, target, alpha=None):
+    N = logit.size(0)
+    C = logit.size(1)
 
-def klLoss(mu, log_var):
-  return -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    if logit.dim() > 2:
+      # N, C, d1, d2, ..., dn --> N * d1 * d2 * ... * dn, C
+      logit = logit.view(N, C, -1)
+      logit = logit.permute(0, 2, 1).contiguous()
+      logit = logit.view(-1, C)
 
-def betaKlLoss(beta, mu, log_var):
-  return beta * klLoss(mu, log_var)
+    # N, d1, d2, ..., dn --> N * d1 * d2 * ... * dn, 1
+    target = torch.squeeze(target, 1)
+    target = target.view(-1, 1)
 
-def maskedNLL(x, y, mask, weight=None):
-  try:
-    loss = F.nll_loss(x, y, reduction='none', weight=weight)
-    return torch.mean(mask * torch.mean(loss.view(mask.size(0), -1), axis=1))
-  except Exception as e:
-    print(e)
-    breakpoint()
+    idx = target.cpu().long()
+    one_hot_key = torch.FloatTensor(target.size(0), C).zero_()
+    one_hot_key = one_hot_key.scatter_(1, idx, 1)
+    one_hot_key = torch.clamp(one_hot_key,
+                              self.smooth / (C - 1),
+                              1.0 - self.smooth)
+    one_hot_key = one_hot_key.to(self.device)
 
-def maskedImageNLL(x, y, mask, weight_map=None):
-  try:
-    loss = F.nll_loss(x, y, reduction='none')
-    if weight_map is not None: loss = weight_map * loss
-    return torch.mean(mask * torch.mean(loss.view(mask.size(0), -1), axis=1))
-  except Exception as e:
-    print(e)
-    breakpoint()
+    pt = (one_hot_key * logit).sum(1) + self.smooth
+    logpt = pt.log()
 
-def maskedMSE(x, y, mask):
-  return torch.mean(mask * torch.mean(F.mse_loss(x, y, reduction='none').view(mask.size(0), -1), axis=1))
+    if alpha is None:
+      alpha = self.alpha.to(self.device)
+    alpha = alpha[idx].squeeze()
+    loss = -1 * alpha * torch.pow((1 - pt), self.gamma) * logpt
+    loss = loss.view(N, -1)
 
-def maskedHuberLoss(x, y, mask):
-  return torch.mean(mask * torch.mean(F.smooth_l1_loss(x, y, reduction='none').view(mask.size(0), -1), axis=1))
+    if self.size_average:
+      loss = loss.mean(1)
+    else:
+      loss = loss.sum(1)
+
+    return loss
+

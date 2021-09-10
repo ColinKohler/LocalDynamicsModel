@@ -37,13 +37,6 @@ class Runner(object):
     ray.init(num_gpus=self.config.num_gpus, ignore_reinit_error=True)
 
     # Checkpoint and replay buffer used to share data over processes
-    if self.config.agent == 'adn' or self.config.agent == 'dyna':
-     lr =[0, 0, 0]
-    elif self.config.agent == 'shooting':
-      lr = [0,0]
-    else:
-      lr = 0
-
     self.checkpoint = {
       'weights' : None,
       'optimizer_state' : None,
@@ -56,7 +49,7 @@ class Runner(object):
       'eps_q_maps' : None,
       'eps_sampled_actions' : None,
       'training_step' : 0,
-      'lr' : lr,
+      'lr' : [0, 0, 0],
       'forward_loss' : 0,
       'state_value_loss' : 0,
       'q_value_loss' : 0,
@@ -71,8 +64,6 @@ class Runner(object):
       'terminate' : False
     }
     self.replay_buffer = dict()
-    if self.config.agent == 'dyna':
-      self.sim_replay_buffer = dict()
 
     # Load checkpoint/replay buffer if specified
     if checkpoint:
@@ -114,28 +105,12 @@ class Runner(object):
   def initWeights(self):
     device = torch.device('cpu')
 
-    if self.config.agent == 'adn':
-      q_value_model = QValueModel(1, 1, device)
-      forward_model = ObsPredictionModel(device, self.config.num_depth_classes).to(device)
-      state_value_model = StateValueModel(1, device)
-      self.checkpoint['weights'] = (torch_utils.dictToCpu(forward_model.state_dict()),
-                                    torch_utils.dictToCpu(state_value_model.state_dict()),
-                                    torch_utils.dictToCpu(q_value_model.state_dict()))
-    elif self.config.agent == 'shooting':
-      forward_model = ObsPredictionModel(device, self.config.num_depth_classes).to(device)
-      reward_model = StateValueModel(1, device)
-      self.checkpoint['weights'] = (torch_utils.dictToCpu(forward_model.state_dict()),
-                                    torch_utils.dictToCpu(reward_model.state_dict()))
-    elif self.config.agent == 'dyna':
-      q_value_model = QValueModel(1, 1, device)
-      forward_model = ObsPredictionModel(device, self.config.num_depth_classes).to(device)
-      reward_model = StateValueModel(1, device)
-      self.checkpoint['weights'] = (torch_utils.dictToCpu(forward_model.state_dict()),
-                                    torch_utils.dictToCpu(q_value_model.state_dict()),
-                                    torch_utils.dictToCpu(reward_model.state_dict()))
-    else:
-      q_value_model = QValueModel(1, 1, device)
-      self.checkpoint['weights'] = torch_utils.dictToCpu(q_value_model.state_dict())
+    q_value_model = QValueModel(1, 1, device)
+    forward_model = ObsPredictionModel(device, self.config.num_depth_classes).to(device)
+    state_value_model = StateValueModel(1, device)
+    self.checkpoint['weights'] = (torch_utils.dictToCpu(forward_model.state_dict()),
+                                  torch_utils.dictToCpu(state_value_model.state_dict()),
+                                  torch_utils.dictToCpu(q_value_model.state_dict()))
 
   def train(self):
     # Init workers
@@ -160,13 +135,6 @@ class Runner(object):
     ]
     self.replay_buffer_worker = ReplayBuffer.options(num_cpus=0, num_gpus=0, max_concurrency=self.config.num_sampler_workers).remote(self.checkpoint, self.replay_buffer, self.config, self.sampler_workers)
 
-    if self.config.agent == 'dyna':
-      self.sim_sampler_workers = [
-        Sampler.options(num_cpus=0, num_gpus=sampler_gpu_allocation).remote(self.checkpoint, self.config, self.config.seed + seed)
-        for seed in range(self.config.num_sampler_workers)
-      ]
-      self.sim_replay_buffer_worker = ReplayBuffer.options(num_cpus=0, num_gpus=0, max_concurrency=self.config.num_sampler_workers).remote(self.checkpoint, self.sim_replay_buffer, self.config, self.sim_sampler_workers)
-
     self.data_gen_workers = [
       DataGenerator.options(num_cpus=0, num_gpus=num_data_gen_gpus).remote(self.checkpoint, self.config, self.config.seed + seed)
       for seed in range(self.config.num_agent_workers)
@@ -185,18 +153,10 @@ class Runner(object):
       for data_gen_worker in self.expert_data_gen_workers:
         data_gen_worker.continuousDataGen.remote(self.shared_storage_worker, self.replay_buffer_worker)
     else:
-      if self.config.agent == 'dyna'):
-        for data_gen_worker in self.data_gen_workers[:-1]:
-          data_gen_worker.continuousDataGen.remote(self.shared_storage_worker, self.replay_buffer_worker)
-        data_gen_workers[-1].continuousSimDataGen.remote(self.shared_storage_worker, self.sim_replay_buffer_worker)
-      else:
-        for data_gen_worker in self.data_gen_workers:
-          data_gen_worker.continuousDataGen.remote(self.shared_storage_worker, self.replay_buffer_worker)
+      for data_gen_worker in self.data_gen_workers:
+        data_gen_worker.continuousDataGen.remote(self.shared_storage_worker, self.replay_buffer_worker)
 
-    if self.config.agent == 'dyna':
-      self.training_worker.continuousUpdateWeightsDyna.remote(self.replay_buffer_worker, self.sim_replay_buffer_worker, self.shared_storage_worker)
-    else:
-      self.training_worker.continuousUpdateWeights.remote(self.replay_buffer_worker, self.shared_storage_worker)
+    self.training_worker.continuousUpdateWeights.remote(self.replay_buffer_worker, self.shared_storage_worker)
 
     self.loggingLoop()
 
@@ -262,19 +222,9 @@ class Runner(object):
         writer.add_scalar('2.Workers/3.Num_steps', info['num_steps'], counter)
         writer.add_scalar('2.Workers/4.Training_steps_per_eps_step_ratio',
                           info['training_step'] / max(1, info['num_steps']), counter)
-        if self.config.agent == 'adn':
-          writer.add_scalar('2.Workers/5.Forward_learning_rate', info['lr'][0], counter)
-          writer.add_scalar('2.Workers/6.State_value_learning_rate', info['lr'][1], counter)
-          writer.add_scalar('2.Workers/7.Q_value_learning_rate', info['lr'][2], counter)
-        elif self.config.agent == 'shooting':
-          writer.add_scalar('2.Workers/5.Forward_learning_rate', info['lr'][0], counter)
-          writer.add_scalar('2.Workers/6.State_value_learning_rate', info['lr'][1], counter)
-        elif self.config.agent == 'dyna':
-          writer.add_scalar('2.Workers/5.Forward_learning_rate', info['lr'][0], counter)
-          writer.add_scalar('2.Workers/6.State_value_learning_rate', info['lr'][2], counter)
-          writer.add_scalar('2.Workers/7.Q_value_learning_rate', info['lr'][1], counter)
-        else:
-          writer.add_scalar('2.Workers/6.Q_value_learning_rate', info['lr'], counter)
+        writer.add_scalar('2.Workers/5.Forward_learning_rate', info['lr'][0], counter)
+        writer.add_scalar('2.Workers/6.State_value_learning_rate', info['lr'][1], counter)
+        writer.add_scalar('2.Workers/7.Q_value_learning_rate', info['lr'][2], counter)
         writer.add_scalar('3.Loss/2.State_value_loss', info['state_value_loss'], counter)
         writer.add_scalar('3.Loss/3.Q_Value_loss', info['q_value_loss'], counter)
         writer.add_scalar('3.Loss/4.Reward_loss', info['reward_loss'], counter)
@@ -298,7 +248,6 @@ class Runner(object):
         if eps_obs is not None:
           eps_len = info['eps_len']
 
-          #states = [o[0] for o in eps_obs[0]]
           real_obs = np.array([o[2] for o in eps_obs[0]]).reshape(-1, self.config.obs_size, self.config.obs_size)
           pred_obs = np.array([o for o in eps_obs[1]])
           pred_obs = np.vstack([real_obs[0].reshape(1, self.config.obs_size, self.config.obs_size), pred_obs])
@@ -401,17 +350,3 @@ class Runner(object):
         self.checkpoint['num_eps'] = 0
         self.checkpoint['num_steps'] = 0
         self.checkpoint['training_step'] = 0
-
-
-  def loadExpertBuffer(self, expert_buffer_path):
-    if os.path.exists(expert_buffer_path):
-      with open(expert_buffer_path, 'rb') as f:
-        data = pickle.load(f)
-
-      self.expert_replay_buffer = data['buffer']
-      self.checkpoint['num_eps'] = data['num_eps']
-      self.checkpoint['num_steps'] = data['num_steps']
-
-      print('Loading replay buffer from {}'.format(expert_buffer_path))
-    else:
-      print('Replay buffer not found at {}'.format(expert_buffer_path))

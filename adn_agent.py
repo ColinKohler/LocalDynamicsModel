@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import os
 import copy
 import numpy as np
@@ -9,28 +6,43 @@ import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-from agents.base_agent import BaseAgent
 from models.obs_prediction_model import ObsPredictionModel
 from models.state_value_model import StateValueModel
 from models.q_value_model import QValueModel
 from data import data_utils
 from data.episode_history import Node
 import utils
+import models.torch_utils as torch_utils
+from models.losses import FocalLoss
 
-import torch_utils.utils as torch_utils
-import torch_utils.losses as torch_losses
+class ADNAgent(object):
+  def __init__(self, config, device, training=False):
+    self.device = device
+    self.config = config
+    self.training = training
 
-class ADNAgent(BaseAgent):
-  def __init__(self, config, device, training=False, depth=None):
-    super(ADNAgent, self).__init__(config, device, training=training)
+    self.workspace = constants.WORKSPACE
+    self.obs_res = constants.OBS_RESOLUTION
+    self.obs_size = constants.OBS_SIZE
+    self.deictic_obs_size = constants.DEICTIC_OBS_SIZE
+    self.hand_obs_size = constants.HAND_OBS_SIZE
+    self.rotations = torch.from_numpy(np.linspace(0, np.pi, self.config.num_rots, endpoint=False))
+    self.action_sample_pen_size = self.config.init_action_sample_pen_size
 
-    self.branch_factors = [4, 2, 1]
-    self.depth = depth if depth else self.config.depth
+    self.preprocessDepth = functools.partial(data_utils.preprocessDepth,
+                                             min=0.,
+                                             max=self.config.max_height,
+                                             num_classes=self.config.num_depth_classes,
+                                             round=2,
+                                             noise=False)
+
+    self.unnormalizeDepth = functools.partial(data_utils.unnormalizeData,
+                                              min=0,
+                                              max=self.config.max_height)
 
     self.forward_model = ObsPredictionModel(self.device, self.config.num_depth_classes).to(self.device)
     self.state_value_model = StateValueModel(1, self.device).to(self.device)
     self.q_value_model = QValueModel(1, 1, self.device).to(self.device)
-    self.action_sample_pen_size = self.config.init_action_sample_pen_size
 
     if self.training:
       self.forward_optimizer = torch.optim.Adam(self.forward_model.parameters(),
@@ -53,11 +65,11 @@ class ADNAgent(BaseAgent):
                                                 betas=(0.9, 0.999))
       self.q_value_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.q_value_optimizer,
                                                                       self.config.lr_decay)
-      self.focal_loss = torch_losses.FocalLoss(self.device,
-                                               alpha=torch.ones(self.config.num_depth_classes),
-                                               gamma=0.0,
-                                               smooth=1e-5,
-                                               size_average=True)
+      self.focal_loss = FocalLoss(self.device,
+                                  alpha=torch.ones(self.config.num_depth_classes),
+                                  gamma=0.0,
+                                  smooth=1e-5,
+                                  size_average=True)
 
       self.forward_model.train()
       self.state_value_model.train()
@@ -98,7 +110,6 @@ class ADNAgent(BaseAgent):
 
     rot_q_map = rot_q_map[:, int(obs[0])]
     q_map = utils.rotateObs(rot_q_map, -self.rotations)
-    #q_map = self.getQMap(obs)
     root = Node(None, 0, obs, value.item(), reward.item(), q_map.cpu().numpy())
 
     self.expandNode(root)
@@ -163,9 +174,6 @@ class ADNAgent(BaseAgent):
     action_value = action_value.squeeze()
     action_reward = action_reward.squeeze()
 
-    #for v, o, h in zip(action_value, action_obs_, hand_obs_):
-     # utils.plotObs(o,h,v)
-
     # Add nodes to the search tree
     node.expand(pixel_actions,
                 state_,
@@ -210,13 +218,19 @@ class ADNAgent(BaseAgent):
     self.action_sample_pen_size = [max(rot_pen - 1, self.config.end_action_sample_pen_size[0]),
                                    max(pos_pen - 2, self.config.end_action_sample_pen_size[1])]
 
-  def getBranchFactor(self, depth):
-    if self.depth == 1:
-      return self.config.num_sampled_actions
-    elif depth >= len(self.branch_factors):
-      return self.branch_factors[-1]
-    else:
-      return self.branch_factors[depth]
+  def getHandStates(self, deictic_obs, deictic_obs_):
+    num_obs = deictic_obs.size(0)
+    d = int(constants.DEICTIC_OBS_SIZE / 2)
+    s = int(constants.DEICTIC_OBS_SIZE / 4)
+
+    is_block_pre_pick = torch.sum(
+      (torch.argmax(deictic_obs[:,:,d-s:d+s, d-s:d+s], dim=1) > 0.0).view(num_obs, -1), dim=1
+    ) > 25
+    is_block_post_pick = torch.sum(
+      (torch.argmax(deictic_obs_[:,:,d-s:d+s, d-s:d+s], dim=1) > 0.0).view(num_obs, -1), dim=1
+    ) > 25
+
+    return torch.bitwise_and(is_block_pre_pick, ~is_block_post_pick)
 
   def updateWeights(self, batch, class_weight):
     # Check that training mode was enabled at init
@@ -274,7 +288,6 @@ class ADNAgent(BaseAgent):
       obs = obs[torch.arange(self.config.batch_size), state_batch[:,t-1]]
 
       pred_state_value, pred_reward = self.state_value_model(obs, hand_obs_batch[:,t])
-      #pred_q_map = self.getQMap((state_batch, hand_obs_batch, obs_batch))
       pred_q_map = None
 
       predictions.append((deictic_obs_, pred_q_map, pred_state_value, pred_reward))
@@ -344,21 +357,8 @@ class ADNAgent(BaseAgent):
 
     state_value_loss =  F.smooth_l1_loss(state_value, target_state_value, reduction='none')
     reward_loss =  F.smooth_l1_loss(reward, target_reward, reduction='none')
-    if q_values is not None:
-      #q_values = list()
-      #for i in range(batch_size):
-      #  actions = target_q_value[i,:,1:]
-      #  num_sampled_actions = 1 #self.config.num_sampled_actions + 1
-      #  q_values.append(q_map[torch.ones(num_sampled_actions).long() * i, actions[:,2].long(), actions[:,0].long(), actions[:,1].long()])
-      #q_values = torch.stack(q_values)
-      q_value_loss = F.smooth_l1_loss(q_values, target_q_value, reduction='none')
-    else:
-      q_value_loss = 0
-
-    if deictic_obs is not None:
-      forward_loss = self.focal_loss(deictic_obs, target_deictic_obs, alpha=class_weight)
-    else:
-      forward_loss = 0
+    q_value_loss = F.smooth_l1_loss(q_values, target_q_value, reduction='none') if q_values is not None else 0
+    forward_loss = self.focal_loss(deictic_obs, target_deictic_obs, alpha=class_weight) if deictic_obs is not None else 0
 
     return q_value_loss, state_value_loss, reward_loss, forward_loss
 
@@ -371,6 +371,14 @@ class ADNAgent(BaseAgent):
     return (self.forward_optimizer.param_groups[0]['lr'],
             self.state_value_optimizer.param_groups[0]['lr'],
             self.q_value_optimizer.param_groups[0]['lr'])
+
+  def loadWeights(self, checkpoint):
+    checkpoint_path = os.path.join(self.config.root_path, checkpoint, 'model.checkpoint')
+    if not os.path.exists(checkpoint_path):
+      raise ValueError('Checkpoint path does not exist: {}'.format(checkpoint_path))
+
+    checkpoint = torch.load(checkpoint_path)
+    self.setWeights(checkpoint['weights'])
 
   def getWeights(self):
     return (torch_utils.dictToCpu(self.forward_model.state_dict()),

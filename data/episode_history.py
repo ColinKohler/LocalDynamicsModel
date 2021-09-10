@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 
 from data import data_utils
 
-import torch_utils.losses as torch_losses
-
 class EpisodeHistory(object):
   def __init__(self, expert_traj=False):
     self.expert_traj = expert_traj
@@ -23,35 +21,6 @@ class EpisodeHistory(object):
     self.priorities = None
     self.eps_priority = None
 
-  def storeSearchStats(self, root, actions):
-    if root is not None:
-      sum_visits = sum(child.visit_count for child in root.children.values())
-      self.child_visits.append(
-        [
-          root.children[a].visit_count / sum_visits
-          if a in root.children
-          else 0
-          for a in actions
-        ]
-      )
-
-      self.value_history.append(root.value)
-    else:
-      self.value_history.append(None)
-
-  def getStackedObs(self, idx, num_obs):
-    idx = idx % len(self.obs_history)
-
-    stacked_obs = self.obs_history[idx]
-    for past_obs_idx in reversed(range(index - num_obs, idx)):
-      if 0 <= past_obs_idx:
-        prev_obs = np.concatenate(
-          self.obs_history[past_obs_idx],
-          [np.ones_like(stacked_obs[0]) * self.action_history[past_obs_idx] + 1]
-        )
-      else:
-        prev_obs = np
-
 class Node(object):
   def __init__(self, parent, depth, obs, value, reward, q_map=None):
     self.parent = parent
@@ -61,8 +30,7 @@ class Node(object):
     self.value = value
     self.reward = reward
     self.depth = depth
-    self.q_map = q_map#.reshape(1, q_map.shape[1], q_map.shape[-1], q_map.shape[-1])
-    #self.q_map = q_map.reshape(1, 2, q_map.shape[-1], q_map.shape[-1])
+    self.q_map = q_map
     self.sampled_actions = list()
 
   def expanded(self):

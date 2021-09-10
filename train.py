@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import ray
 import argparse
 
@@ -27,7 +24,5 @@ if __name__ == '__main__':
   runner = Runner(task_config,
                   checkpoint=args.checkpoint,
                   replay_buffer=args.buffer)
-
   runner.train()
-
   ray.shutdown()

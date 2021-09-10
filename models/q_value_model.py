@@ -1,15 +1,11 @@
-import sys
-sys.path.append('..')
-
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from torch_utils import Flatten, makeLayer, BasicBlock, UpsamplingBlock3
 from data import constants
 from data import data_utils
-
-from torch_utils.modules.general_layers import Flatten
-from torch_utils.modules.resnet import makeLayer, BasicBlock, BottleneckBlock, UpsamplingBlock3, CatConv
 
 class QValueModel(nn.Module):
   def __init__(self, in_kernels, out_kernels, device):
@@ -68,7 +64,6 @@ class QValueModel(nn.Module):
 
     for m in self.modules():
       if isinstance(m, (nn.Conv2d)):
-        #nn.init.kaiming_normal_(m.weight, mode='fan_out', a=0.01, nonlinearity='leaky_relu')
         nn.init.xavier_normal_(m.weight)
       elif isinstance(m, nn.BatchNorm2d):
         nn.init.constant_(m.weight, 1)

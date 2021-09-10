@@ -1,14 +1,10 @@
-import sys
-sys.path.append('..')
-
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from data import constants
 
-from torch_utils.modules.general_layers import Flatten, DoubleConvBlock
-from torch_utils.modules.resnet import makeLayer, BottleneckBlock, UpsamplingBlock, CatConv
+from torch_utils import Flatten, makeLayer, BottleneckBlock, UpsamplingBlock, CatConv
+from data import constants
 
 class ObsPredictionModel(nn.Module):
   def __init__(self, device, out_kernels):
@@ -128,7 +124,7 @@ class ActionPrimativeModel(nn.Module):
 
     grid_shape = (actions.size(0), 1, constants.DEICTIC_OBS_SIZE, constants.DEICTIC_OBS_SIZE)
     grid = F.affine_grid(R, grid_shape, align_corners=True).to(self.device)
-    deictic_obs = F.grid_sample(deictic_obs, grid, padding_mode='border', align_corners=False, mode='bilinear')
+    deictic_obs = F.grid_sample(deictic_obs, grid, padding_mode='zeros', align_corners=False, mode='bilinear')
 
     c = actions[:, :2]
     padding = [int(constants.DEICTIC_OBS_SIZE / 2)] * 4

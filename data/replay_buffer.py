@@ -7,11 +7,7 @@ import numpy.random as npr
 import torch
 
 import utils
-from agents.adn_agent import ADNAgent
-from agents.shooting_agent import ShootingAgent
-from agents.fc_dqn_agent import FCDQNAgent
-from agents.rot_fc_dqn_agent import RotFCDQNAgent
-from data import data_utils
+from adn_agent import ADNAgent
 
 @ray.remote
 class ReplayBuffer():
@@ -214,87 +210,32 @@ class Sampler():
       self.device = torch.device('cuda')
     else:
       self.device = torch.device('cpu')
-    if self.config.agent == 'adn':
-      self.agent = ADNAgent(self.config, self.device, depth=1)
-    elif self.config.agent == 'shooting':
-      self.agent = ShootingAgent(self.config, self.device)
-    elif self.config.agent == 'fc_dqn':
-      self.agent = FCDQNAgent(self.config, self.device)
-    elif self.config.agent == 'rot_fc_dqn':
-      self.agent = RotFCDQNAgent(self.config, self.device)
-    else:
-      raise ValueError
+
+    self.agent = ADNAgent(self.config, self.device)
     self.agent.setWeights(initial_checkpoint['weights'])
 
-  def computeADNTargetValue(self, eps_history, idx):
+  def computeTargetValue(self, eps_history, idx):
     if idx + 1 < len(eps_history.obs_history):
       q_map, q_maps, sampled_actions, pixel_action, pred_obs, values = self.agent.selectAction(
         eps_history.obs_history[idx],
         normalize_obs=False,
         return_all_states=True
       )
-      #sampled_values = torch.from_numpy(np.array(values))
-      #sampled_actions = torch.tensor(sampled_actions)
-
-      #v, r = self.agent.getStateValue(eps_history.obs_history[idx+1], normalize_obs=False)
-      #if eps_history.expert_traj:
-      #  state_value = eps_history.reward_history[idx] + self.config.discount * v.item()
-      #else:
 
       state_value = eps_history.reward_history[idx] + self.config.discount * values[np.argmax(values)]
       q_value = eps_history.reward_history[idx] + self.config.discount * torch.max(q_maps).item()
-      # TODO: Replace this w/vectorized method
-      #a_v = dict()
-      #for v,a in zip(sampled_values, sampled_actions):
-      #  pa = tuple(a[:2].tolist())
-      #  if pa in a_v.keys():
-      #    a_v[pa] = max(a_v[pa], v.item())
-      #  else:
-      #    a_v[pa] = v.item()
-      #sampled_actions = torch.tensor([list(pa) for pa in a_v.keys()])
-      #sampled_values = torch.tensor(list(a_v.values()))
-
-      #num_sampled_actions = 1# self.config.num_sampled_actions + 1
-      #q_value = torch.zeros(num_sampled_actions, 3)
-      #q_value = torch.zeros(num_sampled_actions, 4)
-      #q_value[0,0] = eps_history.reward_history[idx] + self.config.discount * torch.max(q_maps)
-      #q_value[0,1:] = torch.tensor(eps_history.action_history[idx+1][1:])
-      #q_value[0,1:] = torch.tensor(eps_history.action_history[idx+1][1:3])
-
-      #q_value[1:,0] = sampled_values
-      #q_value[1:,1:] = sampled_actions
     else:
-      num_sampled_actions = 1 #self.config.num_sampled_actions + 1
+      num_sampled_actions = 1
       state_value = eps_history.reward_history[idx]
       q_value = eps_history.reward_history[idx]
 
     return state_value, q_value
 
-  def computeFCDQNTargetValue(self, eps_history, idx):
-    if idx + 1 < len(eps_history.obs_history):
-      q_map, pixel_action, value = self.agent.selectAction(
-        eps_history.obs_history[idx],
-        normalize_obs=False,
-      )
-      state_value = eps_history.reward_history[idx] + self.config.discount * value
-    else:
-      state_value = eps_history.reward_history[idx]
-
-    return state_value, torch.tensor(0)
-
-  def computeShootingTargetValue(self, eps_history, idx):
-    return torch.tensor(0), torch.tensor(0)
-
   def makeTarget(self, eps_history, step_idx, idx, weight):
     target_state_values, target_q_values, target_rewards, state, hand_obs, obs, actions = [list() for _ in range(7)]
     for current_idx in range(step_idx, step_idx + self.config.num_unroll_steps + 1):
       if current_idx < len(eps_history.value_history):
-        if self.config.agent == 'adn':
-          state_value, q_value = self.computeADNTargetValue(eps_history, current_idx)
-        elif self.config.agent == 'shooting':
-          state_value, q_value = self.computeShootingTargetValue(eps_history, current_idx)
-        else:
-          state_value, q_value = self.computeFCDQNTargetValue(eps_history, current_idx)
+        state_value, q_value = self.computeADNTargetValue(eps_history, current_idx)
         target_state_values.append(state_value)
         target_q_values.append(q_value)
         target_rewards.append(eps_history.reward_history[current_idx])
@@ -320,6 +261,6 @@ class Sampler():
 
   def updateTargetNetwork(self, shared_storage):
     training_step = ray.get(shared_storage.getInfo.remote('training_step'))
-    if self.config.agent == 'adn' and training_step % self.config.decay_action_sample_pen == 0 and training_step > 0:
+    if training_step % self.config.decay_action_sample_pen == 0 and training_step > 0:
       self.agent.decayActionSamplePen()
     self.agent.setWeights(ray.get(shared_storage.getInfo.remote('weights')))

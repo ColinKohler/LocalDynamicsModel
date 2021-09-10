@@ -2,7 +2,6 @@ import os
 import numpy as np
 import numpy.random as npr
 import matplotlib.pyplot as plt
-import networkx as nx
 
 import torch
 import torch.nn.functional as F
@@ -66,13 +65,11 @@ def getDeicticActions(obs, actions, num_depth_classes=None):
 def getHandObs(obs, num_depth_classes=None):
   device = obs.device
 
-  #zoom = constants.HAND_OBS_SIZE / constants.DEICTIC_OBS_SIZE
-  zoom = 24 / constants.DEICTIC_OBS_SIZE
+  zoom = constants.HAND_OBS_SIZE / constants.DEICTIC_OBS_SIZE
   theta = torch.Tensor([[zoom, 0.,    0.],
                         [0.,   zoom,  0.]]).view(1,2,3)
   theta = theta.repeat(obs.size(0), 1, 1)
-  #grid_shape = (obs.size(0), 1, constants.HAND_OBS_SIZE, constants.HAND_OBS_SIZE)
-  grid_shape = (obs.size(0), 1, 24, 24)
+  grid_shape = (obs.size(0), 1, constants.HAND_OBS_SIZE, constants.HAND_OBS_SIZE)
   grid = F.affine_grid(theta, grid_shape, align_corners=True).to(device)
 
   crops = F.grid_sample(obs, grid, padding_mode='zeros', align_corners=True, mode='nearest')
