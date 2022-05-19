@@ -17,7 +17,7 @@ import utils
 import models.torch_utils as torch_utils
 from models.losses import FocalLoss
 
-class ADNAgent(object):
+class LDMAgent(object):
   def __init__(self, config, device, training=False):
     self.device = device
     self.config = config

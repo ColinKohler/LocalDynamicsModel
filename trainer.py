@@ -7,7 +7,7 @@ import numpy.random as npr
 import ray
 import torch
 
-from adn_agent import ADNAgent
+from ldm_agent import LDMAgent
 
 @ray.remote
 class Trainer(object):
@@ -18,7 +18,7 @@ class Trainer(object):
     else:
       self.device = torch.device('cpu')
 
-    self.agent = ADNAgent(self.config, self.device, training=True)
+    self.agent = LDMAgent(self.config, self.device, training=True)
 
     self.agent.setWeights(copy.deepcopy(initial_checkpoint['weights']))
     if initial_checkpoint['optimizer_state'] is not None:

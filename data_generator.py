@@ -7,7 +7,7 @@ import torch
 import functools
 
 from data.episode_history import EpisodeHistory
-from adn_agent import ADNAgent
+from ldm_agent import LDMAgent
 from data import data_utils
 from data import constants
 import utils
@@ -27,7 +27,7 @@ class DataGenerator(object):
     npr.seed(self.seed)
     torch.manual_seed(self.seed)
 
-    self.agent = ADNAgent(self.config, self.device)
+    self.agent = LDMAgent(self.config, self.device)
     self.agent.setWeights(initial_checkpoint['weights'])
 
   def continuousDataGen(self, shared_storage, replay_buffer, test_mode=False):
