@@ -23,3 +23,14 @@ python train block_stacking_3 --results_path=model_name
 python test block_stacking_3 model_name
 
 ## Config
+
+# Model Architectures
+
+## Local Dynamics Model
+![LDM](/assets/local_dynamics_model.png)
+
+## Q-Value Model
+![Q](/assets/q_value_model.png)
+
+## State-Value Model
+![S](/assets/s_value_model.png)
