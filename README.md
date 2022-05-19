@@ -1,5 +1,5 @@
 # Introduction
-This repository implements the Action Dynamics Network in PyTorch.
+This repository implements the Local Dynamics Model in PyTorch.
 
 # Code Structure
 The structure of this project is based on this [MuZero implementation](https://github.com/werner-duvaud/muzero-general).
