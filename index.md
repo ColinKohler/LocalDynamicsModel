@@ -41,6 +41,8 @@ change within $$B_a$$, a neighborhood around the action $$a$$. The output of the
 original scene. The figure below details the UNet model architecture which we use for the LDM in our experiments,
 each blue box represents a 3x ResNet Block. For additional details on Local Dyanmics Models see our paper.
 
+{% include figure image_path="/assets/images/ldm_ex.png" %}
+
 <figure>
   <a href="/assets/images/ldm_model_sm.png"><img src="/assets/images/ldm_model_sm.png"></a>
 </figure>
