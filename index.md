@@ -33,7 +33,7 @@ property of top-down manipulation to dramatically improve the sample efficeny of
 shows these two properties.
 
 <figure>
-  <a href="/assets/images/ldm_ex.png"><img src="/assets/images/ldm_ex.png"></a>
+  <a href="{{ "/assets/images/ldm_ex.png" | relative }}"><img src="{{  "/assets/images/ldm_ex.png" | relative }}"></a>
 </figure>
 
 In order to predict the next scene image $$s'_{scene}$$, we learn a model $$\bar{f}$$ that predicts how the scene will 
@@ -41,26 +41,24 @@ change within $$B_a$$, a neighborhood around the action $$a$$. The output of the
 original scene. The figure below details the UNet model architecture which we use for the LDM in our experiments,
 each blue box represents a 3x ResNet Block. For additional details on Local Dyanmics Models see our paper.
 
-{% include figure image_path="/assets/images/ldm_ex.png" %}
-
 <figure>
-  <a href="/assets/images/ldm_model_sm.png"><img src="/assets/images/ldm_model_sm.png"></a>
+  <a href="{{ "/assets/images/ldm_model_sm.png" | relative }}"><img src="{{ "/assets/images/ldm_model_sm.png" | relative }}"></a>
 </figure>
 
 # Experiments
 
 <figure>
-  <a href="/assets/images/manip_details.png"><img src="/assets/images/manip_details.png"></a>
+  <a href="{{ "/assets/images/manip_details.png" | relative }}"><img src="{{ "/assets/images/manip_details.png" | relative }}"></a>
 </figure>
 
 <figure class="half">
-  <a href="/assets/images/block_stacking_3_learning_curve.png"><img src="/assets/images/block_stacking_3_learning_curve.png"></a>
-  <a href="/assets/images/house_2_learning_curve.png"><img src="/assets/images/house_2_learning_curve.png"></a>
+  <a href="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative }}"><img src="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative }}"></a>
+  <a href="{{ "/assets/images/house_2_learning_curve.png" | relative }}"><img src="{{ "/assets/images/house_2_learning_curve.png" | relative }}"></a>
 </figure>
 
 <figure class="half">
-  <a href="/assets/images/bottle_tray_learning_curve.png"><img src="/assets/images/bottle_tray_learning_curve.png"></a>
-  <a href="/assets/images/bin_packing_learning_curve.png"><img src="/assets/images/bin_packing_learning_curve.png"></a>
+  <a href="{{ "/assets/images/bottle_tray_learning_curve.png" | relative }}"><img src="{{ "/assets/images/bottle_tray_learning_curve.png" | relative }}"></a>
+  <a href="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"><img src="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"></a>
 </figure>
 
 
