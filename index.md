@@ -8,7 +8,7 @@ sidebar:
     image: 
     text: "Colin Kohler, Robert Platt Northeastern University" 
 ---
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 **Abstract:** Model-free policy learning has been shown to be capable of learning manipulation policies which can 
 solve long-time horizon tasks using single-step manipulation primitives. However, training these 
