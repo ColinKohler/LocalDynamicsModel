@@ -19,12 +19,16 @@ manipulation tasks using one-step lookahead planning. We show that the LDM is bo
 and outperforms other model architectures. When combined with planning, we can outperform other 
 model-based and model-free policies on several challenging manipulation tasks in simulation. 
 
+----
+
 # Paper
 Our work has been accepted to the 54th International Symposium on Robotics (ISRR 2022). Currently a preprint is
 avaliable on [Arxiv](https://arxiv.org/pdf/2206.14802.pdf).
 
+----
+
 # Local Dynamics Model
-We investigate the use of visual foresight for use in complex robotic manipulation tasks through the use of a Local
+We investigate the use of visual foresight in complex robotic manipulation tasks through the use of a Local
 Dynamics Model (LDM). The LDM learns the state-transition function for the pick and place primitves within the 
 spatial action space. Unlike previous work which learns a dynamics model in latent space, LDM exploits the encoding
 of actions into image-space native to the spatial action space to instead learn an image-to-image transition function.
@@ -39,16 +43,37 @@ shows these two properties.
 In order to predict the next scene image $$s'_{scene}$$, we learn a model $$\bar{f}$$ that predicts how the scene will 
 change within $$B_a$$, a neighborhood around the action $$a$$. The output of the model is then inserted back into the 
 original scene. The figure below details the UNet model architecture which we use for the LDM in our experiments,
-each blue box represents a 3x ResNet Block. For additional details on Local Dyanmics Models see our paper.
+each blue box represents a 3x3 ResNet Block. For additional details on Local Dyanmics Models see our paper.
 
 <figure>
   <a href="{{ "/assets/images/ldm_model_sm.png" | relative }}"><img src="{{ "/assets/images/ldm_model_sm.png" | relative }}"></a>
 </figure>
 
-# Experiments
+----
+
+# Policy Learning 
+
+In this work we focus on robotic manipulation problems expressed as Markov decision processes in the spatial action space. In this MDP,
+the state is a top-down image of the workspace paired with an image of the object currently held in the gripper and the action is a 
+subset of $$SE(2)$$. 
 
 <figure>
   <a href="{{ "/assets/images/manip_details.png" | relative }}"><img src="{{ "/assets/images/manip_details.png" | relative }}"></a>
+</figure>
+
+In the figure above, the MDP state is illistrated. (a) The manipulation scene, (b) the top-down image of the workspace $$s_{scene}$$, 
+(c) the in-hand image, $$s_{hand}$$.
+
+----
+
+# Experiments
+We performed a series of experiments to demonstrate the we can learn effective policies across a number of complex roboitic manipulation
+tasks. Specifically, we examine the four tasks detailed in the figure below: Block stacking, house building, bottle arrangement, and 
+bin packing. The window in the top-left corner shows the goal state for each of the tasks. For additional detalils and experiments 
+please see our paper.
+
+<figure>
+  <a href="{{ "/assets/images/domain_ex.png" | relative }}"><img src="{{ "/assets/images/domain_ex.png" | relative }}"></a>
 </figure>
 
 <figure class="half">
@@ -61,11 +86,16 @@ each blue box represents a 3x ResNet Block. For additional details on Local Dyan
   <a href="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"><img src="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"></a>
 </figure>
 
+----
 
 # Video
 
+----
+
 # Code
 The code for the Local Dynamics Model detailed in this work can be found [here](https://github.com/ColinKohler/LocalDynamicsModel).
+
+----
 
 # Citation
 ```
@@ -80,6 +110,8 @@ The code for the Local Dynamics Model detailed in this work can be found [here](
 }
 
 ```
+
+----
 
 # Contact
 If you have any questions, please feel free to contact [Colin Kohler](https://colinkohler.github.io/webpage/) at kohler[dot]c[at]northeastern[dot]edu.
