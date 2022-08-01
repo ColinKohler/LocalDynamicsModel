@@ -37,7 +37,7 @@ property of top-down manipulation to dramatically improve the sample efficeny of
 shows these two properties.
 
 <figure>
-  <a href="{{ "/assets/images/ldm_ex.png" | relative }}"><img src="{{  "/assets/images/ldm_ex.png" | relative }}"></a>
+  <a href="{{ "/assets/images/ldm_ex.png" | relative_url }}"><img src="{{  "/assets/images/ldm_ex.png" | relative_url }}"></a>
 </figure>
 
 In order to predict the next scene image $$s'_{scene}$$, we learn a model $$\bar{f}$$ that predicts how the scene will 
@@ -46,7 +46,7 @@ original scene. The figure below details the UNet model architecture which we us
 each blue box represents a 3x3 ResNet Block. For additional details on Local Dyanmics Models see our paper.
 
 <figure>
-  <a href="{{ "/assets/images/ldm_model_sm.png" | relative }}"><img src="{{ "/assets/images/ldm_model_sm.png" | relative }}"></a>
+  <a href="{{ "/assets/images/ldm_model_sm.png" | relative_url }}"><img src="{{ "/assets/images/ldm_model_sm.png" | relative_url }}"></a>
 </figure>
 
 ----
@@ -58,7 +58,7 @@ the state is a top-down image of the workspace paired with an image of the objec
 subset of $$SE(2)$$. 
 
 <figure>
-  <a href="{{ "/assets/images/manip_details.png" | relative }}"><img src="{{ "/assets/images/manip_details.png" | relative }}"></a>
+  <a href="{{ "/assets/images/manip_details.png" | relative_url }}"><img src="{{ "/assets/images/manip_details.png" | relative_url }}"></a>
 </figure>
 
 In the figure above, the MDP state is illistrated. (a) The manipulation scene, (b) the top-down image of the workspace $$s_{scene}$$, 
@@ -73,17 +73,17 @@ bin packing. The window in the top-left corner shows the goal state for each of 
 please see our paper.
 
 <figure>
-  <a href="{{ "/assets/images/domain_ex.png" | relative }}"><img src="{{ "/assets/images/domain_ex.png" | relative }}"></a>
+  <a href="{{ "/assets/images/domain_ex.png" | relative_url }}"><img src="{{ "/assets/images/domain_ex.png" | relative_url }}"></a>
 </figure>
 
 <figure class="half">
-  <a href="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative }}"><img src="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative }}"></a>
-  <a href="{{ "/assets/images/house_2_learning_curve.png" | relative }}"><img src="{{ "/assets/images/house_2_learning_curve.png" | relative }}"></a>
+  <a href="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/block_stacking_3_learning_curve.png" | relative_url }}"></a>
+  <a href="{{ "/assets/images/house_2_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/house_2_learning_curve.png" | relative_url }}"></a>
 </figure>
 
 <figure class="half">
-  <a href="{{ "/assets/images/bottle_tray_learning_curve.png" | relative }}"><img src="{{ "/assets/images/bottle_tray_learning_curve.png" | relative }}"></a>
-  <a href="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"><img src="{{ "/assets/images/bin_packing_learning_curve.png" | relative }}"></a>
+  <a href="{{ "/assets/images/bottle_tray_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/bottle_tray_learning_curve.png" | relative_url }}"></a>
+  <a href="{{ "/assets/images/bin_packing_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/bin_packing_learning_curve.png" | relative_url }}"></a>
 </figure>
 
 ----
