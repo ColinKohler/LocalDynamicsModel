@@ -43,34 +43,37 @@ shows these two properties.
 In order to predict the next scene image $$s'_{scene}$$, we learn a model $$\bar{f}$$ that predicts how the scene will 
 change within $$B_a$$, a neighborhood around the action $$a$$. The output of the model is then inserted back into the 
 original scene. The figure below details the UNet model architecture which we use for the LDM in our experiments,
-each blue box represents a 3x3 ResNet Block. For additional details on Local Dyanmics Models see our paper.
+each blue box represents a 3x3 ResNet Block. 
 
 <figure>
   <a href="{{ "/assets/images/ldm_model_sm.png" | relative_url }}"><img src="{{ "/assets/images/ldm_model_sm.png" | relative_url }}"></a>
 </figure>
+
+For additional details on Local Dyanmics Models see our paper.
 
 ----
 
 # Policy Learning 
 
 In this work we focus on robotic manipulation problems expressed as Markov decision processes in the spatial action space. In this MDP,
-the state is a top-down image of the workspace paired with an image of the object currently held in the gripper and the action is a 
-subset of $$SE(2)$$. 
+the state is a top-down image of the workspace, $$s_{scene}$$, paired with an image of the object currently held in the gripper, $$s_{hand}$$ 
+and the action is a  subset of $$SE(2)$$. In the figure below, the MDP state is illistrated. (a) The manipulation scene, (b) the top-down image 
+of the workspace $$s_{scene}$$, (c) the in-hand image, $$s_{hand}$$. 
 
 <figure>
   <a href="{{ "/assets/images/manip_details.png" | relative_url }}"><img src="{{ "/assets/images/manip_details.png" | relative_url }}"></a>
 </figure>
 
-In the figure above, the MDP state is illistrated. (a) The manipulation scene, (b) the top-down image of the workspace $$s_{scene}$$, 
-(c) the in-hand image, $$s_{hand}$$.
+While there are a variety of ways to improve policy learning using a dynamics model, in this work
+we take a relatively simple one-step lookahead approach. We learn the state value function $$V_{\psi}(s)$$, and use it in combination
+with the dynamics model to estimate the $$Q$$ function, $$\hat{Q}(s,a) = V_{\psi}(f(s,a))$$
 
 ----
 
 # Experiments
 We performed a series of experiments to demonstrate the we can learn effective policies across a number of complex roboitic manipulation
 tasks. Specifically, we examine the four tasks detailed in the figure below: Block stacking, house building, bottle arrangement, and 
-bin packing. The window in the top-left corner shows the goal state for each of the tasks. For additional detalils and experiments 
-please see our paper.
+bin packing. The window in the top-left corner shows the goal state for each of the tasks. 
 
 <figure>
   <a href="{{ "/assets/images/domain_ex.png" | relative_url }}"><img src="{{ "/assets/images/domain_ex.png" | relative_url }}"></a>
@@ -85,6 +88,8 @@ please see our paper.
   <a href="{{ "/assets/images/bottle_tray_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/bottle_tray_learning_curve.png" | relative_url }}"></a>
   <a href="{{ "/assets/images/bin_packing_learning_curve.png" | relative_url }}"><img src="{{ "/assets/images/bin_packing_learning_curve.png" | relative_url }}"></a>
 </figure>
+
+For additional detalils and experiments please see our paper.
 
 ----
 
